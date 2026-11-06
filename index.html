@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>エルゴレース - 理工ローイングチュロス</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffff00">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<div id="app" data-phase="waiting" data-ready="false" data-mode="key">
+  <header class="top">
+    <h1><b class="logo">理工ローイングチュロス</b> <span>エルゴ勝負</span></h1>
+    <div class="top-right">
+      <div id="wins" class="wins">本日のチャレンジャー勝利数 <b id="wins-count">0</b> <small id="wins-detail"></small></div>
+      <button id="mute-btn" class="text-btn" title="音のオン・オフ">音: オフ</button>
+      <button id="fs-btn" class="text-btn" title="全画面(F)" hidden>全画面</button>
+      <button id="settings-btn" class="text-btn" title="設定">設定</button>
+    </div>
+  </header>
+
+  <main class="lanes">
+    <section id="lane-left" class="lane" data-lane="left" data-conn="idle">
+      <div class="lane-head">
+        <h2>チャレンジャー <small>(左)</small></h2>
+        <div class="conn"><span class="dot"></span><span class="conn-text">未接続</span> <span class="device"></span></div>
+        <button class="connect-btn">PM5 をつなぐ</button>
+      </div>
+      <div class="water">
+        <div class="finish-line"><span>GOAL</span></div>
+        <div class="boat" aria-hidden="true">
+          <svg viewBox="-40 0 240 240" width="100%" height="100%" overflow="visible"><use href="#boat-svg"/></svg>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="big"><small class="remain-label">残り</small><b class="dist">0</b><span>m</span></div>
+        <div class="rowed">漕いだ <b class="rowed-m">0</b> m</div>
+        <div class="row">
+          <div><small>ペース/500m</small><b class="pace">--:--</b></div>
+          <div><small>SPM</small><b class="spm">0</b></div>
+          <div><small>パワー</small><b class="power">0</b><i>W</i></div>
+        </div>
+        <div class="target"></div>
+      </div>
+    </section>
+
+    <section id="lane-right" class="lane" data-lane="right" data-conn="idle">
+      <div class="lane-head">
+        <h2>部員 <small>(右)</small></h2>
+        <div class="conn"><span class="dot"></span><span class="conn-text">未接続</span> <span class="device"></span></div>
+        <button class="connect-btn">PM5 をつなぐ</button>
+      </div>
+      <div class="water">
+        <div class="finish-line"><span>GOAL</span></div>
+        <div class="boat" aria-hidden="true">
+          <svg viewBox="-40 0 240 240" width="100%" height="100%" overflow="visible"><use href="#boat-svg"/></svg>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="big"><small class="remain-label">残り</small><b class="dist">0</b><span>m</span></div>
+        <div class="rowed">漕いだ <b class="rowed-m">0</b> m</div>
+        <div class="row">
+          <div><small>ペース/500m</small><b class="pace">--:--</b></div>
+          <div><small>SPM</small><b class="spm">0</b></div>
+          <div><small>パワー</small><b class="power">0</b><i>W</i></div>
+        </div>
+        <div class="target"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="center-panel">
+    <div id="status-msg" class="status-msg">PM5 を2台つなぐか、設定で練習モードにしてください</div>
+    <div id="elapsed" class="elapsed" title="GO からの経過時間(秒)">0.00</div>
+    <button id="start-btn" class="main-btn" disabled>スタート</button>
+    <button id="abort-btn" class="abort-btn" title="レースを中止(Esc キー。記録に残さず待機に戻る)">中止 (Esc)</button>
+  </div>
+
+  <div id="countdown" class="countdown" hidden><span id="count-num">Attention</span></div>
+
+  <div id="result" class="result" hidden>
+    <div class="result-card">
+      <div id="result-title" class="result-title"></div>
+      <div id="result-sub" class="result-sub"></div>
+      <div id="result-times" class="result-times"></div>
+      <button id="next-btn" class="main-btn">次のレースへ</button>
+    </div>
+  </div>
+
+  <aside id="settings" class="settings" hidden>
+    <h3>設定</h3>
+    <label>接続の方法
+      <select id="set-mode">
+        <option value="real">実機(PM5 を2台つなぐ)</option>
+        <option value="key">練習: キーボード(左 A 連打・右 L 連打)</option>
+        <option value="auto">練習: 自動の擬似データ</option>
+      </select>
+    </label>
+    <label>レース距離
+      <span class="field"><input id="set-distance" type="number" inputmode="numeric" min="10" max="10000" step="1" value="100"><span class="unit">m</span></span>
+    </label>
+    <div class="presets" id="dist-presets" role="group" aria-label="よく使う距離">
+      <button type="button" data-dist="100">100</button>
+      <button type="button" data-dist="200">200</button>
+      <button type="button" data-dist="250">250</button>
+      <button type="button" data-dist="500">500</button>
+      <button type="button" data-dist="1000">1000</button>
+    </div>
+    <label>部員のハンデ(部員に足す距離)
+      <span class="field"><input id="set-handicap" type="number" inputmode="numeric" min="0" max="10000" step="1" value="0"><span class="unit">m</span></span>
+    </label>
+    <p id="set-msg" class="set-msg" role="status" aria-live="polite"></p>
+    <label class="check"><input id="set-muted" type="checkbox"> 音を消す</label>
+    <label class="check"><input id="set-clear" type="checkbox"> 本日の記録を消す(閉じるときに実行)</label>
+    <button id="settings-close" class="main-btn small">閉じる</button>
+  </aside>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="boat-svg">
+      <!-- 上から見たシングルスカル(艇首が上、漕ぎ手は艇尾=下を向く)。艇体はレーンの色(currentColor)。
+           オール・座面・上体・腕・頭は src/stroke.js の位相から JS(main.js の applyPose)が動かす -->
+      <g class="oar oar-l"><line class="shaft" x1="50" y1="112" x2="-10" y2="112" stroke="#5a3a14" stroke-width="3.5" stroke-linecap="round"/><rect class="blade" x="-10" y="105" width="22" height="14" rx="5" fill="#fff" stroke="#111" stroke-width="2"/></g>
+      <g class="oar oar-r"><line class="shaft" x1="110" y1="112" x2="170" y2="112" stroke="#5a3a14" stroke-width="3.5" stroke-linecap="round"/><rect class="blade" x="148" y="105" width="22" height="14" rx="5" fill="#fff" stroke="#111" stroke-width="2"/></g>
+      <path d="M80 4 C92 40 94 90 92 140 C91 190 87 220 80 238 C73 220 69 190 68 140 C66 90 68 40 80 4Z" fill="currentColor" stroke="#fff" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M80 22 C86 60 87 110 86 150 C85 190 83 212 80 226 C77 212 75 190 74 150 C73 110 74 60 80 22Z" fill="#00000026"/>
+      <path d="M72 108 L50 112 M88 108 L110 112" stroke="#222" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      <circle cx="50" cy="112" r="4" fill="#fff" stroke="#111" stroke-width="2"/><circle cx="110" cy="112" r="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <!-- オールのハンドル側(クラッチより内側)は艇体より上に描く。上から見て、手がハンドルを握って見える -->
+      <g class="oar-in oar-in-l"><line x1="50" y1="112" x2="84" y2="112" stroke="#5a3a14" stroke-width="3.5" stroke-linecap="round"/></g>
+      <g class="oar-in oar-in-r"><line x1="110" y1="112" x2="76" y2="112" stroke="#5a3a14" stroke-width="3.5" stroke-linecap="round"/></g>
+      <rect class="seat" x="73" y="104" width="14" height="8" rx="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+      <line class="torso" x1="80" y1="112" x2="80" y2="122" stroke="#111" stroke-width="15" stroke-linecap="round"/>
+      <line class="torso-fill" x1="80" y1="112" x2="80" y2="122" stroke="#ffd400" stroke-width="11.5" stroke-linecap="round"/>
+      <line class="arm arm-l" x1="71" y1="122" x2="64" y2="143" stroke="#111" stroke-width="5.5" stroke-linecap="round"/>
+      <line class="arm arm-r" x1="89" y1="122" x2="96" y2="143" stroke="#111" stroke-width="5.5" stroke-linecap="round"/>
+      <line class="arm-fill arm-l" x1="71" y1="122" x2="64" y2="143" stroke="#f2c9a0" stroke-width="2.5" stroke-linecap="round"/>
+      <line class="arm-fill arm-r" x1="89" y1="122" x2="96" y2="143" stroke="#f2c9a0" stroke-width="2.5" stroke-linecap="round"/>
+      <g class="head">
+        <circle cx="0" cy="0" r="7" fill="#f2c9a0" stroke="#111" stroke-width="2.5"/>
+        <path d="M-6.4 -2.8 A7 7 0 0 1 6.4 -2.8 Q0 -5.5 -6.4 -2.8Z" fill="#3a2410"/>
+        <path d="M-2 6.8 L0 10.5 L2 6.8" fill="none" stroke="#111" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+<script type="module" src="src/main.js"></script>
+<script>
+// オフラインで動くための service worker。localhost の開発では、古いファイルが残らないよう ?sw=1 を付けたときだけ登録する
+if ('serviceWorker' in navigator) {
+  const dev = ['localhost', '127.0.0.1'].includes(location.hostname) && !/[?&]sw=1/.test(location.search);
+  if (!dev) navigator.serviceWorker.register('sw.js').catch((e) => console.warn('service worker', e));
+}
+</script>
+</body>
+</html>
