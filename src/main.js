@@ -168,6 +168,7 @@ function goRace() {
     if (sims[l]) { sims[l].last = null; sims[l].active = true; if (sims[l].kind === 'auto') sims[l].begin(runSeed + (l === 'left' ? 7919 : 0)); } // 待機中は tick していないので時間差の基準を作り直す
   }
   race.start(base, now);
+  audio.bgmStart();
   $('#elapsed').textContent = '0.00';
   setPhase('racing');
   requestDraw();
@@ -176,6 +177,7 @@ function goRace() {
 function abortRace() {
   if (!LOCKED_PHASES.includes(phase)) return;
   clearTimers();
+  audio.bgmStop();
   $('#countdown').hidden = true;
   race = null;
   for (const l of LANES) { shown[l] = 0; render(l, 0, { pace: 0, spm: 0, power: 0 }); el[l].root.style.setProperty('--p', '0'); stroke(l, performance.now(), 0, false); }
@@ -188,6 +190,7 @@ function abortRace() {
 function finishRace(result) {
   for (const l of LANES) sims[l] && (sims[l].active = false);
   setPhase('finished');
+  audio.bgmStop();
   loopUntil = performance.now() + 1000; // 結果の演出の間は描き続ける
   const rec = recordRace(localStorage, { ...result, distance: Number(settings.distance), handicap: Number(settings.handicap) });
   renderWins(rec);
@@ -204,6 +207,7 @@ function finishRace(result) {
 
 function nextRace() {
   if (phase !== 'finished') return;
+  audio.bgmStop();
   $('#result').hidden = true;
   race = null;
   for (const l of LANES) { shown[l] = 0; render(l, 0, { pace: 0, spm: 0, power: 0 }); }
