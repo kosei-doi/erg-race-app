@@ -153,12 +153,14 @@ function startCountdown() {
   const gap = attentionGap();
   const show = (t, call, beep) => { num.textContent = t; box.dataset.call = call; num.style.animation = 'none'; void num.offsetWidth; num.style.animation = ''; beep(); };
   box.hidden = false;
-  // 押してから PRE_COUNT 秒の数え(10・9・…・1)のあとに、今までの Attention → GO
+  // 押してから PRE_COUNT 秒の数え(10・9・…・1)のあと、0 でそのまま GO(Attention は出さない。kosei 2026-11-06)。
+  // PRE_COUNT が 0 のときだけ、従来の Attention → 間 → GO
   const pre = PRE_COUNT * 1000;
   for (const st of countSteps(PRE_COUNT)) later(() => show(st.text, 'tick', audio.tickBeep), st.at);
-  later(() => show('Attention', 'attention', audio.countBeep), pre);
-  later(() => { show('GO!', 'go', audio.goBeep); goRace(); }, pre + gap);
-  later(() => { box.hidden = true; }, pre + gap + 700);
+  const goAt = PRE_COUNT ? pre : gap;
+  if (!PRE_COUNT) later(() => show('Attention', 'attention', audio.countBeep), 0);
+  later(() => { show('GO!', 'go', audio.goBeep); goRace(); }, goAt);
+  later(() => { box.hidden = true; }, goAt + 700);
 }
 
 function goRace() {
