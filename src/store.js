@@ -18,8 +18,8 @@ export function loadToday(storage, now = new Date()) {
 
 export function recordRace(storage, { winner, times, distance, handicap }, now = new Date()) {
   const s = loadToday(storage, now);
-  if (winner === 'left') s.wins += 1; else if (winner === 'right') s.losses += 1; else s.draws += 1;
-  s.history.push({ at: now.toISOString(), winner, distance, handicap, challengerTime: times.left, memberTime: times.right });
+  if (winner === 'right') s.wins += 1; else if (winner === 'left') s.losses += 1; else s.draws += 1;
+  s.history.push({ at: now.toISOString(), winner, distance, handicap, challengerTime: times.right, memberTime: times.left });
   try { storage.setItem(KEY, JSON.stringify(s)); } catch { /* 容量などは無視 */ }
   return s;
 }

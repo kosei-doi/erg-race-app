@@ -20,7 +20,7 @@ const settings = loadSettings(localStorage);
 if (['real', 'key', 'auto'].includes(params.get('mode'))) settings.mode = params.get('mode');
 
 const CONN_TEXT = { idle: '未接続', connecting: '接続中…', connected: '接続OK', reconnecting: '再接続中…', lost: '切断!', error: 'Bluetooth 不可' };
-const LANE_NAME = { left: 'チャレンジャー', right: '部員' };
+const LANE_NAME = { left: '部員', right: 'チャレンジャー' };
 
 const el = {};
 for (const l of LANES) {
@@ -71,7 +71,7 @@ function setupSources() {
       links[l] = new Pm5Link((s) => onRealSample(l, s), (status, name) => onConn(l, status, name));
       onConn(l, 'idle', '');
     } else {
-      sims[l] = new SimLane(settings.mode, { speed: l === 'left' ? 3.7 : 4.0, scale: settings.mode === 'auto' ? simScale : 1, seed: l === 'left' ? 1 : 2, profile: l === 'left' ? 'challenger' : 'member' });
+      sims[l] = new SimLane(settings.mode, { speed: l === 'left' ? 4.0 : 3.7, scale: settings.mode === 'auto' ? simScale : 1, seed: l === 'left' ? 2 : 1, profile: l === 'left' ? 'member' : 'challenger' });
       el[l].root.dataset.conn = 'connected';
       el[l].connText.textContent = '接続OK';
       el[l].device.textContent = settings.mode === 'key' ? `キー ${KEYS[l].toUpperCase()} を連打` : '擬似データ';
@@ -165,7 +165,7 @@ function goRace() {
     const d = settings.mode === 'real' ? raw[l].dist : sims[l].dist;
     base[l] = Number.isFinite(d) ? d : null;
     shown[l] = 0;
-    if (sims[l]) { sims[l].last = null; sims[l].active = true; if (sims[l].kind === 'auto') sims[l].begin(runSeed + (l === 'left' ? 0 : 7919)); } // 待機中は tick していないので時間差の基準を作り直す
+    if (sims[l]) { sims[l].last = null; sims[l].active = true; if (sims[l].kind === 'auto') sims[l].begin(runSeed + (l === 'left' ? 7919 : 0)); } // 待機中は tick していないので時間差の基準を作り直す
   }
   race.start(base, now);
   $('#elapsed').textContent = '0.00';
@@ -193,13 +193,13 @@ function finishRace(result) {
   renderWins(rec);
   const card = $('.result-card'), title = $('#result-title'), sub = $('#result-sub'), times = $('#result-times');
   card.dataset.winner = result.winner;
-  if (result.winner === 'left') { title.textContent = 'チャレンジャーの勝ち!'; sub.textContent = 'トッピング無料!'; }
-  else if (result.winner === 'right') { title.textContent = '部員の勝ち!'; sub.textContent = 'また挑戦してね!'; }
+  if (result.winner === 'right') { title.textContent = 'チャレンジャーの勝ち!'; sub.textContent = 'トッピング無料!'; }
+  else if (result.winner === 'left') { title.textContent = '部員の勝ち!'; sub.textContent = 'また挑戦してね!'; }
   else { title.textContent = '引き分け!'; sub.textContent = 'もう一回!'; }
   const t = (x) => (x == null ? '未ゴール' : `${formatTime(x)} 秒`);
-  times.textContent = `チャレンジャー ${t(result.times.left)}　/　部員 ${t(result.times.right)}`;
+  times.textContent = `チャレンジャー ${t(result.times.right)}　/　部員 ${t(result.times.left)}`;
   $('#result').hidden = false;
-  audio.goalFanfare(result.winner === 'left');
+  audio.goalFanfare(result.winner === 'right');
 }
 
 function nextRace() {
@@ -220,11 +220,11 @@ $('#next-btn').addEventListener('click', (e) => { e.currentTarget.blur(); nextRa
 $('#abort-btn').addEventListener('click', (e) => { e.currentTarget.blur(); abortRace(); });
 
 // ---- 描画 ----
-// レーンの目標距離(左=レース距離、右=レース距離+ハンデ。Race の targets と同じ考え)
+// レーンの目標距離(右=レース距離、左=レース距離+ハンデ。Race の targets と同じ考え)
 function laneTarget(l) {
   if (race) return race.targets[l];
   const d = Number(settings.distance), h = Math.max(0, Number(settings.handicap) || 0);
-  return l === 'right' ? d + h : d;
+  return l === 'left' ? d + h : d;
 }
 
 // dist は進んだ距離。大きい数字は残り(目標 - 進んだ距離、切り上げ、0 未満にしない)、進んだ距離は小さく出す
@@ -280,9 +280,9 @@ function stroke(l, now, spm, running) {
 
 function renderTargets() {
   const d = Number(settings.distance), h = Number(settings.handicap) || 0;
-  el.left.target.textContent = `ゴールまで ${d} m`;
+  el.right.target.textContent = `ゴールまで ${d} m`;
   if (!race) for (const l of LANES) el[l].dist.textContent = String(laneTarget(l)); // 待機中は残り=目標(設定を変えたらすぐ変わる)
-  el.right.target.textContent = h > 0 ? `ハンデ +${h} m → ${d + h} m` : `ゴールまで ${d} m`;
+  el.left.target.textContent = h > 0 ? `ハンデ +${h} m → ${d + h} m` : `ゴールまで ${d} m`;
 }
 
 function renderWins(rec = loadToday(localStorage)) {

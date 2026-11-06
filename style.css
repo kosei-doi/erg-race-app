@@ -3,7 +3,7 @@
   --sky: #dff3ff; --water: #54b6e8; --water-dark: #2c8fc4;
   --poster-green: #22ee00; --poster-yellow: #ffff00; --pink: #ff52e6; --star-blue: #1565d8;
   --churro: #ffff00; --churro-dark: #111; --ink: #10202e;
-  --left: #e0102a; --right: #1446e0; --ok: #0a7a2a; --warn: #b87800; --bad: #d63a3a;
+  --left: #1446e0; --right: #e0102a; --ok: #0a7a2a; --warn: #b87800; --bad: #d63a3a;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
@@ -21,7 +21,7 @@ body {
 .top h1 span { font-size: calc(var(--hu) * 2.6); white-space: nowrap; background: var(--star-blue); color: #fff; border-radius: calc(var(--u) * 2); padding: calc(var(--hu) * 0.3) calc(var(--hu) * 1.6); border: calc(var(--hu) * 0.3) solid #111; }
 .top-right { display: flex; align-items: center; gap: calc(var(--hu) * 1.5); white-space: nowrap; }
 .wins { background: #fff; color: var(--ink); border-radius: calc(var(--hu) * 2); padding: calc(var(--hu) * 0.8) calc(var(--hu) * 2); font-size: calc(var(--hu) * 2.6); border: calc(var(--hu) * 0.3) solid #111; white-space: nowrap; }
-.wins b { font-size: calc(var(--hu) * 4); color: var(--left); margin: 0 calc(var(--hu) * 0.5); }
+.wins b { font-size: calc(var(--hu) * 4); color: var(--right); margin: 0 calc(var(--hu) * 0.5); }
 .wins small { color: #4a5a68; font-size: calc(var(--hu) * 1.8); }
 .text-btn { font: inherit; font-size: calc(var(--hu) * 2.4); font-weight: 900; color: #111; height: calc(var(--hu) * 5.2); padding: 0 calc(var(--hu) * 2); background: #fff; border: calc(var(--hu) * 0.4) solid #111; border-radius: calc(var(--hu) * 3); white-space: nowrap; cursor: pointer; }
 @media (max-width: 1400px) { .top h1 span, .wins small { display: none; } }
@@ -100,7 +100,7 @@ body {
 .result-card[data-winner="right"] .result-title { color: var(--right); }
 .result-card[data-winner="draw"] .result-title { color: var(--warn); }
 .result-sub { white-space: nowrap; font-size: min(calc(var(--u) * 7), 6vw); font-weight: 900; color: var(--ink); margin: calc(var(--u) * 2) 0; min-height: calc(var(--u) * 10); }
-.result-card[data-winner="left"] .result-sub { background: var(--star-blue); color: var(--poster-yellow); -webkit-text-stroke: calc(var(--u) * 0.3) #111; paint-order: stroke fill; width: var(--star); height: calc(var(--star) * 0.645); font-size: calc(var(--star) * 0.098); margin: calc(var(--u) * 1) auto calc(var(--u) * 2); display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1.15;
+.result-card[data-winner="right"] .result-sub { background: var(--star-blue); color: var(--poster-yellow); -webkit-text-stroke: calc(var(--u) * 0.3) #111; paint-order: stroke fill; width: var(--star); height: calc(var(--star) * 0.645); font-size: calc(var(--star) * 0.098); margin: calc(var(--u) * 1) auto calc(var(--u) * 2); display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1.15;
   clip-path: polygon(50.0% 0.0%,55.6% 14.4%,65.5% 2.4%,68.2% 14.4%,79.4% 9.5%,75.5% 24.5%,90.5% 20.6%,85.6% 31.8%,97.6% 34.5%,85.6% 44.4%,100.0% 50.0%,89.5% 56.3%,97.6% 65.5%,82.1% 66.3%,90.5% 79.4%,78.3% 78.3%,79.4% 90.5%,66.3% 82.1%,65.5% 97.6%,56.3% 89.5%,50.0% 100.0%,44.4% 85.6%,34.5% 97.6%,31.8% 85.6%,20.6% 90.5%,24.5% 75.5%,9.5% 79.4%,14.4% 68.2%,2.4% 65.5%,14.4% 55.6%,0.0% 50.0%,10.5% 43.7%,2.4% 34.5%,17.9% 33.7%,9.5% 20.6%,21.7% 21.7%,20.6% 9.5%,33.7% 17.9%,34.5% 2.4%,43.7% 10.5%); }
 .result-times { white-space: nowrap; font-size: min(calc(var(--u) * 4), 2.9vw); margin-bottom: calc(var(--u) * 3); font-variant-numeric: tabular-nums; }
 

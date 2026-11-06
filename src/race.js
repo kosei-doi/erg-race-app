@@ -9,10 +9,10 @@ export const LANES = ['left', 'right'];
 export class Race {
   /**
    * @param {{distance:number, handicap?:number}} opt
-   *   distance: チャレンジャー(left)が漕ぐ距離 / handicap: 部員(right)に足す距離
+   *   distance: チャレンジャー(right)が漕ぐ距離 / handicap: 部員(left)に足す距離
    */
   constructor({ distance, handicap = 0 }) {
-    this.targets = { left: distance, right: distance + Math.max(0, handicap) };
+    this.targets = { left: distance + Math.max(0, handicap), right: distance };
     this.startAt = null;
     this.lanes = {};
     this.firstFinishAt = null;
