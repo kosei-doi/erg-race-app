@@ -41,6 +41,7 @@ function beep(freq, dur, when = 0, type = 'square', gain = 0.15) {
 }
 export const unlock = () => beep(1, 0.01, 0, 'sine', 0.0001);
 export const countBeep = () => beep(660, 0.18);
+export const tickBeep = () => beep(440, 0.08, 0, 'square', 0.1);
 export const goBeep = () => beep(1320, 0.5);
 export const goalFanfare = (win) => {
   const notes = win ? [523, 659, 784, 1047, 784, 1047] : [440, 392, 349];

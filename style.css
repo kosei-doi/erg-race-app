@@ -89,6 +89,7 @@ body {
 
 .countdown { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #0a3a0099; z-index: 10; }
 .countdown span { white-space: nowrap; font-size: min(calc(var(--u) * 24), 13vw); font-weight: 900; color: #fff; -webkit-text-stroke: calc(var(--u) * 1.2) #111; paint-order: stroke fill; text-shadow: 0 calc(var(--u) * 1.2) 0 #111; animation: pop 0.5s ease-out; }
+.countdown[data-call="tick"] span { font-size: min(calc(var(--u) * 48), 36vw); }
 .countdown[data-call="go"] span { font-size: min(calc(var(--u) * 56), 40vw); color: #ffff00; text-shadow: 0 calc(var(--u) * 1.5) 0 #e00, 0 0 calc(var(--u) * 6) #fff; }
 @keyframes pop { from { transform: scale(1.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .countdown[hidden], .result[hidden], .settings[hidden] { display: none; }

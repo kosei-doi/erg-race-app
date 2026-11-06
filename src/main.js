@@ -5,6 +5,7 @@ import { buildBoat, applyBoatPose } from './boat-view.js';
 import { StrokeTracker, poseAt, driveFraction } from './stroke.js';
 import { formatPace, formatTime, wattsFromPace } from './pm5-parse.js';
 import * as audio from './audio.js';
+import { parseCountdown, countSteps } from './countdown.js';
 import { loadToday, recordRace, loadSettings, saveSettings, parseIntInRange, DIST_MIN, DIST_MAX, HCP_MAX } from './store.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -13,6 +14,8 @@ const simSeed = Number(params.get('simseed')) || 0; // 試験用: 自動モー�
 const simScale = Number(params.get('simspeed')) || 1; // 試験用: 自動モードの速さの倍率
 // 試験用: countms を指定すると Attention → GO の間を countms×2 ミリ秒に固定する。指定が無ければ本物の発艇のように 1.5〜3 秒のランダム
 const COUNT_MS = Number(params.get('countms')) || 0;
+// 押してから Attention までの数え(秒)。?countdown=N で変える。0 なら数えずにすぐ Attention。既定 10
+const PRE_COUNT = parseCountdown(params.get('countdown'));
 const attentionGap = () => (COUNT_MS ? COUNT_MS * 2 : 1500 + Math.random() * 1500);
 
 const app = $('#app');
@@ -150,9 +153,12 @@ function startCountdown() {
   const gap = attentionGap();
   const show = (t, call, beep) => { num.textContent = t; box.dataset.call = call; num.style.animation = 'none'; void num.offsetWidth; num.style.animation = ''; beep(); };
   box.hidden = false;
-  show('Attention', 'attention', audio.countBeep);
-  later(() => { show('GO!', 'go', audio.goBeep); goRace(); }, gap);
-  later(() => { box.hidden = true; }, gap + 700);
+  // 押してから PRE_COUNT 秒の数え(10・9・…・1)のあとに、今までの Attention → GO
+  const pre = PRE_COUNT * 1000;
+  for (const st of countSteps(PRE_COUNT)) later(() => show(st.text, 'tick', audio.tickBeep), st.at);
+  later(() => show('Attention', 'attention', audio.countBeep), pre);
+  later(() => { show('GO!', 'go', audio.goBeep); goRace(); }, pre + gap);
+  later(() => { box.hidden = true; }, pre + gap + 700);
 }
 
 function goRace() {
