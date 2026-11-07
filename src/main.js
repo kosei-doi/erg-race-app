@@ -23,7 +23,11 @@ const settings = loadSettings(localStorage);
 if (['real', 'key', 'auto'].includes(params.get('mode'))) settings.mode = params.get('mode');
 
 const CONN_TEXT = { idle: '未接続', connecting: '接続中…', connected: '接続OK', reconnecting: '再接続中…', lost: '切断!', error: 'Bluetooth 不可' };
-const LANE_NAME = { left: '部員', right: 'チャレンジャー' };
+// 対戦の形ごとのレーンの名前。member: 部員(左・青) 対 チャレンジャー(右・赤) / versus: チャレンジャー同士 青(左) 対 赤(右)
+const LANE_NAMES = { member: { left: '部員', right: 'チャレンジャー' }, versus: { left: '青', right: '赤' } };
+const isVersus = () => settings.matchup === 'versus';
+const laneName = (l) => LANE_NAMES[isVersus() ? 'versus' : 'member'][l];
+const handicapNow = () => (isVersus() ? 0 : Math.max(0, Number(settings.handicap) || 0));
 
 const el = {};
 for (const l of LANES) {
@@ -58,7 +62,8 @@ const LOCKED_PHASES = ['countdown', 'racing'];
 function setPhase(p) {
   phase = p; app.dataset.phase = p;
   const locked = LOCKED_PHASES.includes(p); // レース中は接続の方法・距離・ハンデを変えられない
-  setMode.disabled = setDist.disabled = setHcp.disabled = locked;
+  setMode.disabled = setDist.disabled = setMatchup.disabled = locked;
+  setHcp.disabled = locked || isVersus();
   for (const b of distPresets) b.disabled = locked;
   if (locked) $('#settings').hidden = true;
 }
@@ -130,7 +135,7 @@ for (const l of LANES) {
     try { if (link.status === 'lost') await link.reconnect(reject); else await link.pair(reject); }
     catch (e) {
       if (wasFs && (e?.name === 'SecurityError' || e?.name === 'NotAllowedError')) $('#status-msg').textContent = '全画面を抜けました。もう一度押してください';
-      else if (e?.name !== 'NotFoundError') $('#status-msg').textContent = `${LANE_NAME[l]}: ${e?.message || e}`;
+      else if (e?.name !== 'NotFoundError') $('#status-msg').textContent = `${laneName(l)}: ${e?.message || e}`;
     }
     finally { el[l].btn.blur(); } // フォーカスを残さない(あとの Space / Enter / Esc がレースの操作として効くように)
   });
@@ -165,7 +170,7 @@ function startCountdown() {
 
 function goRace() {
   const now = performance.now();
-  race = new Race({ distance: Number(settings.distance), handicap: Number(settings.handicap) });
+  race = new Race({ distance: Number(settings.distance), handicap: handicapNow() });
   const base = {};
   const runSeed = simSeed || ((Math.random() * 0x7fffffff) | 0) + 1; // 自動モード: レースごとに巡航のペース・レート・スタートの本数が少し変わる
   for (const l of LANES) {
@@ -189,6 +194,7 @@ function abortRace() {
   $('#countdown').hidden = true;
   race = null;
   for (const l of LANES) { shown[l] = 0; render(l, 0, { pace: 0, spm: 0, power: 0 }); el[l].root.style.setProperty('--p', '0'); stroke(l, performance.now(), 0, false); }
+  renderTargets();
   setPhase('waiting');
   if (settings.mode !== 'real') setupSources(); // 擬似データの距離を 0 に戻す(実機の接続は切らない)
   updateReady();
@@ -200,17 +206,22 @@ function finishRace(result) {
   setPhase('finished');
   audio.bgmStop();
   loopUntil = performance.now() + 1000; // 結果の演出の間は描き続ける
-  const rec = recordRace(localStorage, { ...result, distance: Number(settings.distance), handicap: Number(settings.handicap) });
+  const versus = isVersus();
+  const rec = recordRace(localStorage, { ...result, distance: Number(settings.distance), handicap: handicapNow(), matchup: versus ? 'versus' : 'member' });
   renderWins(rec);
   const card = $('.result-card'), title = $('#result-title'), sub = $('#result-sub'), times = $('#result-times');
   card.dataset.winner = result.winner;
-  if (result.winner === 'right') { title.textContent = 'チャレンジャーの勝ち!'; sub.textContent = 'トッピング無料!'; }
+  card.dataset.matchup = versus ? 'versus' : 'member';
+  if (versus) {
+    if (result.winner === 'draw') { title.textContent = '引き分け!'; sub.textContent = 'もう一回!'; }
+    else { title.textContent = `${laneName(result.winner)}の勝ち!`; sub.textContent = 'ナイスレース!'; }
+  } else if (result.winner === 'right') { title.textContent = 'チャレンジャーの勝ち!'; sub.textContent = 'トッピング無料!'; }
   else if (result.winner === 'left') { title.textContent = '部員の勝ち!'; sub.textContent = 'また挑戦してね!'; }
   else { title.textContent = '引き分け!'; sub.textContent = 'もう一回!'; }
   const t = (x) => (x == null ? '未ゴール' : `${formatTime(x)} 秒`);
-  times.textContent = `チャレンジャー ${t(result.times.right)}　/　部員 ${t(result.times.left)}`;
+  times.textContent = `${laneName('right')} ${t(result.times.right)}　/　${laneName('left')} ${t(result.times.left)}`;
   $('#result').hidden = false;
-  audio.goalFanfare(result.winner === 'right');
+  audio.goalFanfare(versus ? result.winner !== 'draw' : result.winner === 'right');
 }
 
 function nextRace() {
@@ -219,6 +230,7 @@ function nextRace() {
   $('#result').hidden = true;
   race = null;
   for (const l of LANES) { shown[l] = 0; render(l, 0, { pace: 0, spm: 0, power: 0 }); }
+  renderTargets();
   setPhase('waiting');
   if (settings.mode !== 'real') setupSources(); // 擬似データの距離を 0 に戻す(実機の接続は切らない)
   updateReady();
@@ -235,7 +247,7 @@ $('#abort-btn').addEventListener('click', (e) => { e.currentTarget.blur(); abort
 // レーンの目標距離(右=レース距離、左=レース距離+ハンデ。Race の targets と同じ考え)
 function laneTarget(l) {
   if (race) return race.targets[l];
-  const d = Number(settings.distance), h = Math.max(0, Number(settings.handicap) || 0);
+  const d = Number(settings.distance), h = handicapNow();
   return l === 'left' ? d + h : d;
 }
 
@@ -291,7 +303,8 @@ function stroke(l, now, spm, running) {
 }
 
 function renderTargets() {
-  const d = Number(settings.distance), h = Number(settings.handicap) || 0;
+  const d = Number(settings.distance), h = handicapNow();
+  for (const l of LANES) { delete el[l].root.dataset.finished; $('h2', el[l].root).firstChild.textContent = `${laneName(l)} `; }
   el.right.target.textContent = `ゴールまで ${d} m`;
   if (!race) for (const l of LANES) el[l].dist.textContent = String(laneTarget(l)); // 待機中は残り=目標(設定を変えたらすぐ変わる)
   el.left.target.textContent = h > 0 ? `ハンデ +${h} m → ${d + h} m` : `ゴールまで ${d} m`;
@@ -333,6 +346,12 @@ function draw(now) {
       render(l, shown[l], st);
       el[l].root.style.setProperty('--p', String(Math.min(1, shown[l] / target)));
       stroke(l, now, race.running ? st.spm : 0, race.running);
+      if (st.finishedAt !== null && el[l].root.dataset.finished !== 'true') { // 先にゴールした側: 止まって時間を出す。もう一方がゴールするまでレースは続く
+        el[l].root.dataset.finished = 'true';
+        el[l].target.textContent = `ゴール! ${formatTime(st.finishedAt)} 秒`;
+        const other = race.lanes[l === 'left' ? 'right' : 'left'];
+        if (other.finishedAt === null) $('#status-msg').textContent = `${laneName(l)}がゴール! ${laneName(l === 'left' ? 'right' : 'left')}のゴールまで続けます(やめるときは中止)`;
+      }
     }
     if (race.running) $('#elapsed').textContent = formatTime((now - race.startAt) / 1000);
     if (result && phase === 'racing') finishRace(result);
@@ -375,10 +394,13 @@ window.addEventListener('keyup', (e) => { // Space は keyup でボタンが押�
 });
 
 // ---- 設定 ----
-const setMode = $('#set-mode'), setDist = $('#set-distance'), setHcp = $('#set-handicap'), setMuted = $('#set-muted'), setClear = $('#set-clear');
+const setMatchup = $('#set-matchup'), setMode = $('#set-mode'), setDist = $('#set-distance'), setHcp = $('#set-handicap'), setMuted = $('#set-muted'), setClear = $('#set-clear');
 function syncSettingsUi() {
   setMode.value = settings.mode; setDist.value = String(settings.distance);
   setHcp.value = String(settings.handicap); setMuted.checked = !!settings.muted;
+  setMatchup.value = settings.matchup;
+  setHcp.disabled = LOCKED_PHASES.includes(phase) || isVersus();
+  $('#hcp-label').title = isVersus() ? 'チャレンジャー同士のときはハンデなし(同じ距離)' : '';
   $('#mute-btn').textContent = settings.muted ? '音: オフ' : '音: オン';
   audio.setMuted(!!settings.muted);
   renderTargets();
@@ -389,6 +411,7 @@ const setMsg = $('#set-msg');
 function commitSettings() {
   if (LOCKED_PHASES.includes(phase)) { syncSettingsUi(); return; }
   settings.mode = setMode.value;
+  settings.matchup = setMatchup.value === 'versus' ? 'versus' : 'member';
   // 距離・ハンデは範囲内の整数だけ受け付ける。だめなら直前の値に戻して知らせる
   const d = parseIntInRange(setDist.value, DIST_MIN, DIST_MAX), h = parseIntInRange(setHcp.value, 0, HCP_MAX);
   const bad = [];
@@ -402,6 +425,7 @@ function commitSettings() {
 setDist.addEventListener('change', commitSettings);
 for (const b of distPresets) b.addEventListener('click', () => { setDist.value = b.dataset.dist; commitSettings(); });
 setHcp.addEventListener('change', commitSettings);
+setMatchup.addEventListener('change', commitSettings);
 setMuted.addEventListener('change', commitSettings);
 setMode.addEventListener('change', () => {
   if (phase === 'countdown' || phase === 'racing') { setMode.value = settings.mode; return; }

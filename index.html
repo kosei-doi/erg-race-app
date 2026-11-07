@@ -99,6 +99,12 @@
         <option value="auto">練習: 自動の擬似データ</option>
       </select>
     </label>
+    <label>対戦の形
+      <select id="set-matchup">
+        <option value="member">部員(左・青) 対 チャレンジャー(右・赤)</option>
+        <option value="versus">チャレンジャー同士: 青(左) 対 赤(右)</option>
+      </select>
+    </label>
     <label>レース距離
       <span class="field"><input id="set-distance" type="number" inputmode="numeric" min="10" max="10000" step="1" value="100"><span class="unit">m</span></span>
     </label>
@@ -109,7 +115,7 @@
       <button type="button" data-dist="500">500</button>
       <button type="button" data-dist="1000">1000</button>
     </div>
-    <label>部員のハンデ(部員に足す距離)
+    <label id="hcp-label">部員のハンデ(部員に足す距離)
       <span class="field"><input id="set-handicap" type="number" inputmode="numeric" min="0" max="10000" step="1" value="0"><span class="unit">m</span></span>
     </label>
     <p id="set-msg" class="set-msg" role="status" aria-live="polite"></p>

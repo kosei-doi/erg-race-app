@@ -16,15 +16,21 @@ export function loadToday(storage, now = new Date()) {
   return empty(day);
 }
 
-export function recordRace(storage, { winner, times, distance, handicap }, now = new Date()) {
+// matchup: 'member'(部員 対 チャレンジャー)は勝利数に数える。'versus'(チャレンジャー同士の赤 対 青)は履歴にだけ残す
+export function recordRace(storage, { winner, times, distance, handicap, matchup = 'member' }, now = new Date()) {
   const s = loadToday(storage, now);
+  if (matchup === 'versus') {
+    s.history.push({ at: now.toISOString(), matchup, winner, distance, redTime: times.right, blueTime: times.left });
+    try { storage.setItem(KEY, JSON.stringify(s)); } catch { /* 容量などは無視 */ }
+    return s;
+  }
   if (winner === 'right') s.wins += 1; else if (winner === 'left') s.losses += 1; else s.draws += 1;
   s.history.push({ at: now.toISOString(), winner, distance, handicap, challengerTime: times.right, memberTime: times.left });
   try { storage.setItem(KEY, JSON.stringify(s)); } catch { /* 容量などは無視 */ }
   return s;
 }
 
-export const DEFAULT_SETTINGS = { mode: 'key', distance: 100, handicap: 0, muted: true } // 音は既定でミュート;
+export const DEFAULT_SETTINGS = { mode: 'key', distance: 100, handicap: 0, muted: true, matchup: 'member' } // 音は既定でミュート;
 
 export const DIST_MIN = 10, DIST_MAX = 10000, HCP_MAX = 10000;
 
@@ -43,6 +49,7 @@ export function loadSettings(storage) {
   if (parseIntInRange(s.distance, DIST_MIN, DIST_MAX) === null) s.distance = DEFAULT_SETTINGS.distance;
   if (parseIntInRange(s.handicap, 0, HCP_MAX) === null) s.handicap = DEFAULT_SETTINGS.handicap;
   s.distance = Number(s.distance); s.handicap = Number(s.handicap);
+  if (!['member', 'versus'].includes(s.matchup)) s.matchup = 'member';
   return s;
 }
 export function saveSettings(storage, s) { try { storage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch { /* 無視 */ } }

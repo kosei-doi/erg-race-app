@@ -1,6 +1,6 @@
 // エルゴレースの service worker。アプリのファイルを全部キャッシュして、オフラインで起動できるようにする。
 // 版を上げる(VERSION を変える)と、新しいキャッシュに入れ替わり、古いキャッシュは消える。
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE = `erg-race-${VERSION}`;
 // bgm/race.mp3 は入れない(ライセンス上、公開版に置かない。ローカルでは sw を登録しないので普通に読める)
 const FILES = [

@@ -1,7 +1,7 @@
 // レースの判定ロジック(DOM に依存しない純粋なクラス)。
 // 距離は GO の時点の値を 0 とした差分で測る。ゴールの到達時刻は直前のサンプルとの線形補間で求める。
+// 決着は両方がゴールしてから(先にゴールした側は止まり、もう一方が漕ぎ切るまでレースは続く。kosei 2026-11-07)。途中でやめるときは中止(Esc)。
 
-export const FINISH_GRACE_MS = 1200; // 先着が出てから、もう一方の到達を待つ時間。PM5 の通知の間隔(既定 約500ms。書き込みが効かない機種もある)より長くする
 export const DRAW_EPSILON_S = 0.01; // 補間した到達時刻の差がこれ未満なら引き分け
 
 export const LANES = ['left', 'right'];
@@ -72,11 +72,8 @@ export class Race {
     if (this.result) return this.result;
     if (this.firstFinishAt === null) return null;
     const l = this.lanes.left.finishedAt, r = this.lanes.right.finishedAt;
-    const bothDone = l !== null && r !== null;
-    if (!bothDone && now - this.firstFinishAt < FINISH_GRACE_MS) return null;
-    let winner;
-    if (bothDone) winner = Math.abs(l - r) < DRAW_EPSILON_S ? 'draw' : (l < r ? 'left' : 'right');
-    else winner = l !== null ? 'left' : 'right';
+    if (l === null || r === null) return null; // 両方がゴールするまで続ける
+    const winner = Math.abs(l - r) < DRAW_EPSILON_S ? 'draw' : (l < r ? 'left' : 'right');
     this.result = { winner, times: { left: l, right: r } };
     return this.result;
   }
