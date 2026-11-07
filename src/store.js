@@ -20,7 +20,7 @@ export function loadToday(storage, now = new Date()) {
 export function recordRace(storage, { winner, times, distance, handicap, matchup = 'member' }, now = new Date()) {
   const s = loadToday(storage, now);
   if (matchup === 'versus') {
-    s.history.push({ at: now.toISOString(), matchup, winner, distance, redTime: times.right, blueTime: times.left });
+    s.history.push({ at: now.toISOString(), matchup, winner, distance, handicap, redTime: times.right, blueTime: times.left });
     try { storage.setItem(KEY, JSON.stringify(s)); } catch { /* 容量などは無視 */ }
     return s;
   }

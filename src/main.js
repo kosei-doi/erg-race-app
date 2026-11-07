@@ -27,7 +27,7 @@ const CONN_TEXT = { idle: '未接続', connecting: '接続中…', connected: '�
 const LANE_NAMES = { member: { left: '部員', right: 'チャレンジャー' }, versus: { left: '青', right: '赤' } };
 const isVersus = () => settings.matchup === 'versus';
 const laneName = (l) => LANE_NAMES[isVersus() ? 'versus' : 'member'][l];
-const handicapNow = () => (isVersus() ? 0 : Math.max(0, Number(settings.handicap) || 0));
+const handicapNow = () => Math.max(0, Number(settings.handicap) || 0); // 左(部員/青)に足す
 
 const el = {};
 for (const l of LANES) {
@@ -63,7 +63,7 @@ function setPhase(p) {
   phase = p; app.dataset.phase = p;
   const locked = LOCKED_PHASES.includes(p); // レース中は接続の方法・距離・ハンデを変えられない
   setMode.disabled = setDist.disabled = setMatchup.disabled = locked;
-  setHcp.disabled = locked || isVersus();
+  setHcp.disabled = locked;
   for (const b of distPresets) b.disabled = locked;
   if (locked) $('#settings').hidden = true;
 }
@@ -399,8 +399,9 @@ function syncSettingsUi() {
   setMode.value = settings.mode; setDist.value = String(settings.distance);
   setHcp.value = String(settings.handicap); setMuted.checked = !!settings.muted;
   setMatchup.value = settings.matchup;
-  setHcp.disabled = LOCKED_PHASES.includes(phase) || isVersus();
-  $('#hcp-label').title = isVersus() ? 'チャレンジャー同士のときはハンデなし(同じ距離)' : '';
+  setHcp.disabled = LOCKED_PHASES.includes(phase);
+  const hcpText = $('#hcp-text');
+  if (hcpText) hcpText.textContent = isVersus() ? '青のハンデ(青に足す距離)' : '部員のハンデ(部員に足す距離)';
   $('#mute-btn').textContent = settings.muted ? '音: オフ' : '音: オン';
   audio.setMuted(!!settings.muted);
   renderTargets();
