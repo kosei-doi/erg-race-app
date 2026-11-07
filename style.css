@@ -26,7 +26,7 @@ body {
 .text-btn { font: inherit; font-size: calc(var(--hu) * 2.4); font-weight: 900; color: #111; height: calc(var(--hu) * 5.2); padding: 0 calc(var(--hu) * 2); background: #fff; border: calc(var(--hu) * 0.4) solid #111; border-radius: calc(var(--hu) * 3); white-space: nowrap; cursor: pointer; }
 @media (max-width: 1400px) { .top h1 span, .wins small { display: none; } }
 
-.lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 2vw; padding: calc(var(--u) * 0.6) 2vw; min-height: 0; }
+.lanes { container-type: size; display: grid; grid-template-columns: 1fr 1fr; gap: 2vw; padding: calc(var(--u) * 0.6) 2vw; min-height: 0; }
 .lane { display: grid; grid-template-rows: auto 1fr auto; background: #fff; border-radius: calc(var(--u) * 2); padding: calc(var(--u) * 0.5) 1.2vw; box-shadow: 0 calc(var(--u) * 0.8) 0 #0a5a00; min-height: 0; border: calc(var(--u) * 0.8) solid var(--lane-color); }
 #lane-left { --lane-color: var(--left); }
 #lane-right { --lane-color: var(--right); }
@@ -71,6 +71,25 @@ body {
 .row i { font-size: calc(var(--u) * 2.4); font-style: normal; margin-left: calc(var(--u) * 0.4); }
 .target { font-size: calc(var(--u) * 2.2); color: #4a5a68; min-height: calc(var(--u) * 2.6); line-height: 1.15; }
 
+/* PC の大画面(横長で、レーンの幅が高さの約 0.8 倍以上): 統計を水面の左右の余白に重ね、水面をレーンの高さいっぱいに広げる
+   (漕ぐアニメーションの縦の距離を増やすため)。.lanes の幅/高さ >= 1.65 ⇔ レーンの幅/高さ >= 約 0.8。それ以外は上の縦並びのまま */
+@container (min-aspect-ratio: 33/20) and (min-width: 640px) {
+  .water, .stats { grid-row: 2; grid-column: 1; }
+  .stats { --band: calc(var(--u) * 18); /* ボートとオールの幅(16.5u の箱)+渦+余裕。ここは空ける */
+    container-type: inline-size; position: relative; z-index: 1; pointer-events: none; min-height: 0; margin: calc(var(--u) * 0.5) 0; padding: calc(var(--u) * 5) calc(var(--u) * 1.2) calc(var(--u) * 1.2);
+    display: grid; grid-template-columns: minmax(0, 1fr) var(--band) minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); align-content: stretch; }
+  .rowed { align-self: start; }
+  .big, .rowed, .row, .target { background: #ffffffd9; border-radius: calc(var(--u) * 1.2); padding: calc(var(--u) * 0.4) calc(var(--u) * 1); box-shadow: 0 0 0 calc(var(--u) * 0.2) #ffffff80; }
+  .big { grid-column: 1; grid-row: 1; justify-self: center; align-self: start; padding-top: calc(var(--u) * 0.8); }
+  .big .remain-label { display: block; margin: 0; }
+  .big b { font-size: min(calc(var(--u) * 12), calc((50cqw - var(--band) / 2 - var(--u) * 3) / 3)); }
+  .big span { font-size: min(calc(var(--u) * 5), calc((50cqw - var(--band) / 2 - var(--u) * 3) / 7)); margin-left: calc(var(--u) * 0.6); }
+  .rowed { grid-column: 1; grid-row: 2; justify-self: center; margin-top: calc(var(--u) * 1); }
+  .target { grid-column: 1; grid-row: 3; justify-self: center; align-self: end; min-height: 0; }
+  .target:empty { display: none; }
+  .row { grid-column: 3; grid-row: 1 / span 3; justify-self: center; align-self: start; display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u) * 1); padding: calc(var(--u) * 0.8) calc(var(--u) * 1.4); text-align: center; }
+  .row b { font-size: min(calc(var(--u) * 5.4), calc((50cqw - var(--band) / 2 - var(--u) * 4) / 4.2)); }
+}
 .center-panel { display: flex; align-items: center; justify-content: center; gap: 3vw; }
 .center-panel { padding-bottom: calc(var(--u) * 1); }
 .center-panel .main-btn { font-size: calc(var(--u) * 3.4); }
