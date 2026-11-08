@@ -254,7 +254,7 @@ function laneTarget(l) {
 // dist は進んだ距離。大きい数字は残り(目標 - 進んだ距離、切り上げ、0 未満にしない)、進んだ距離は小さく出す
 function render(l, dist, s) {
   const e = el[l];
-  e.dist.textContent = String(Math.max(0, Math.ceil(laneTarget(l) - dist)));
+  e.dist.textContent = String(Math.max(0, Math.ceil(laneTarget(l) - dist))); e.dist.parentElement.dataset.len = String(e.dist.textContent.length);
   e.rowed.textContent = String(Math.floor(dist));
   e.pace.textContent = formatPace(s.pace);
   e.spm.textContent = String(Math.round(s.spm || 0));
@@ -306,7 +306,7 @@ function renderTargets() {
   const d = Number(settings.distance), h = handicapNow();
   for (const l of LANES) { delete el[l].root.dataset.finished; $('h2', el[l].root).firstChild.textContent = `${laneName(l)} `; }
   el.right.target.textContent = `ゴールまで ${d} m`;
-  if (!race) for (const l of LANES) el[l].dist.textContent = String(laneTarget(l)); // 待機中は残り=目標(設定を変えたらすぐ変わる)
+  if (!race) for (const l of LANES) { el[l].dist.textContent = String(laneTarget(l)); el[l].dist.parentElement.dataset.len = String(el[l].dist.textContent.length); } // 待機中は残り=目標(設定を変えたらすぐ変わる)
   el.left.target.textContent = h > 0 ? `ハンデ +${h} m → ${d + h} m` : `ゴールまで ${d} m`;
 }
 
